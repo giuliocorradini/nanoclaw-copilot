@@ -4,6 +4,10 @@ All notable changes to NanoClaw will be documented in this file.
 
 For detailed release notes, see the [full changelog on the documentation site](https://docs.nanoclaw.dev/changelog).
 
+## [Unreleased]
+
+- **Copilot CLI provider (experimental).** Added an in-tree `copilot` provider path in host/container registries, Copilot app-server transport in the container runner, Copilot CLI install in the container image, and migration notes in `docs/copilot-provider.md`.
+
 ## [2.0.54] - 2026-05-10
 
 - **Per-group model and effort overrides.** Agent groups can now run a specific Claude model and effort level, set via `ncl groups config update --model <model> --effort <level>`. Defaults to the host-configured model when unset.

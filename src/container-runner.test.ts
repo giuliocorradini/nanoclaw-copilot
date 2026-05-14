@@ -11,6 +11,10 @@ describe('resolveProviderName', () => {
     expect(resolveProviderName(null, 'opencode')).toBe('opencode');
   });
 
+  it('supports copilot as a resolved provider name', () => {
+    expect(resolveProviderName('copilot', 'claude')).toBe('copilot');
+  });
+
   it('defaults to claude when nothing is set', () => {
     expect(resolveProviderName(null, undefined)).toBe('claude');
   });

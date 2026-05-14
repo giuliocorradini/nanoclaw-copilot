@@ -35,7 +35,14 @@ registerProviderContainerConfig('copilot', (ctx) => {
   const env: Record<string, string> = {
     COPILOT_HOME: '/home/node/.copilot',
   };
-  for (const key of ['GITHUB_TOKEN', 'COPILOT_MODEL', 'COPILOT_APP_SERVER_BIN', 'COPILOT_CONFIG_OVERRIDES'] as const) {
+  for (const key of [
+    'GITHUB_TOKEN',
+    'COPILOT_MODEL',
+    'COPILOT_APP_SERVER_BIN',
+    'COPILOT_CONFIG_OVERRIDES',
+    'COPILOT_SANDBOX',
+    'COPILOT_APPROVAL_POLICY',
+  ] as const) {
     const value = ctx.hostEnv[key];
     if (value) env[key] = value;
   }

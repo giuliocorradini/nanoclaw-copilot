@@ -19,7 +19,7 @@ import {
 
 const TURN_TIMEOUT_MS = 5 * 60 * 1000;
 
-export function resolveClaudeImports(content: string, baseDir: string, seen: Set<string> = new Set()): string {
+export function resolvePromptImports(content: string, baseDir: string, seen: Set<string> = new Set()): string {
   return content.replace(/^@(\S+)\s*$/gm, (_match, importPath: string) => {
     try {
       const resolved = path.resolve(baseDir, importPath);
@@ -28,7 +28,7 @@ export function resolveClaudeImports(content: string, baseDir: string, seen: Set
       const nextSeen = new Set(seen);
       nextSeen.add(resolved);
       const imported = fs.readFileSync(resolved, 'utf-8');
-      return resolveClaudeImports(imported, path.dirname(resolved), nextSeen);
+      return resolvePromptImports(imported, path.dirname(resolved), nextSeen);
     } catch {
       return '';
     }
@@ -42,10 +42,10 @@ function readAgentAndGlobalClaudeMd(): string | undefined {
   const parts: string[] = [];
 
   if (fs.existsSync(groupPath)) {
-    parts.push(resolveClaudeImports(fs.readFileSync(groupPath, 'utf-8'), groupDir));
+    parts.push(resolvePromptImports(fs.readFileSync(groupPath, 'utf-8'), groupDir));
   }
   if (fs.existsSync(localPath)) {
-    parts.push(resolveClaudeImports(fs.readFileSync(localPath, 'utf-8'), groupDir));
+    parts.push(resolvePromptImports(fs.readFileSync(localPath, 'utf-8'), groupDir));
   }
 
   return parts.length > 0 ? parts.join('\n\n---\n\n') : undefined;
@@ -97,8 +97,8 @@ export class CopilotProvider implements AgentProvider {
         const threadParams = {
           model: self.model,
           cwd: input.cwd,
-          sandbox: 'danger-full-access',
-          approvalPolicy: 'never',
+          sandbox: process.env.COPILOT_SANDBOX || 'workspace-write',
+          approvalPolicy: process.env.COPILOT_APPROVAL_POLICY || 'on-request',
           personality: 'friendly',
           baseInstructions: composeBaseInstructions(input.systemContext?.instructions),
         };

@@ -28,6 +28,8 @@ The host-side provider contribution (`src/providers/copilot.ts`) prepares a per-
 - `COPILOT_MODEL`
 - `COPILOT_APP_SERVER_BIN`
 - `COPILOT_CONFIG_OVERRIDES`
+- `COPILOT_SANDBOX` (default: `workspace-write`)
+- `COPILOT_APPROVAL_POLICY` (default: `on-request`)
 
 It also sets `COPILOT_HOME=/home/node/.copilot` in the container.
 

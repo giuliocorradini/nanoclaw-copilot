@@ -11,10 +11,10 @@ const INIT_TIMEOUT_MS = 30_000;
 
 export const STALE_THREAD_RE = /thread\s+not\s+found|unknown\s+thread|thread[_\s]id|no such thread/i;
 
-export function tomlBasicString(value: string): string {
+export function tomlBasicString(value: string, context = 'value'): string {
   if (value.includes('\n') || value.includes('\r')) {
     throw new Error(
-      `MCP config value contains newline (not supported in config.toml): ${JSON.stringify(value.slice(0, 40))}${value.length > 40 ? '…' : ''}`,
+      `MCP config ${context} contains newline (not supported in config.toml): ${JSON.stringify(value.slice(0, 40))}${value.length > 40 ? '…' : ''}`,
     );
   }
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
@@ -196,7 +196,7 @@ export function attachCopilotAutoApproval(server: AppServer): void {
         break;
       case 'item/permissions/requestApproval':
         sendCopilotResponse(server, req.id, {
-          permissions: { fileSystem: { read: ['/'], write: ['/'] }, network: { enabled: true } },
+          permissions: { fileSystem: { read: ['/workspace', '/tmp'], write: ['/workspace', '/tmp'] }, network: { enabled: true } },
           scope: 'session',
         });
         break;
@@ -205,10 +205,18 @@ export function attachCopilotAutoApproval(server: AppServer): void {
         sendCopilotResponse(server, req.id, { decision: 'approved' });
         break;
       case 'item/tool/call':
-        sendCopilotResponse(server, req.id, {
-          success: false,
-          contentItems: [{ type: 'inputText', text: 'Dynamic tool call is unavailable. Use MCP tools instead.' }],
-        });
+        {
+          const toolName = (req.params as { tool?: string }).tool || 'unknown';
+          sendCopilotResponse(server, req.id, {
+            success: false,
+            contentItems: [
+              {
+                type: 'inputText',
+                text: `Tool "${toolName}" is not supported in this mode. Please use MCP-registered tools instead.`,
+              },
+            ],
+          });
+        }
         break;
       case 'item/tool/requestUserInput':
       case 'mcpServer/elicitation/request':
@@ -302,14 +310,14 @@ export function writeCopilotMcpConfigToml(servers: Record<string, CopilotMcpServ
   for (const [name, config] of Object.entries(servers)) {
     lines.push(`[mcp_servers.${name}]`);
     lines.push('type = "stdio"');
-    lines.push(`command = ${tomlBasicString(config.command)}`);
+    lines.push(`command = ${tomlBasicString(config.command, `${name}.command`)}`);
     if (config.args && config.args.length > 0) {
-      lines.push(`args = [${config.args.map(tomlBasicString).join(', ')}]`);
+      lines.push(`args = [${config.args.map((arg, idx) => tomlBasicString(arg, `${name}.args[${idx}]`)).join(', ')}]`);
     }
     if (config.env && Object.keys(config.env).length > 0) {
       lines.push(`[mcp_servers.${name}.env]`);
       for (const [key, value] of Object.entries(config.env)) {
-        lines.push(`${key} = ${tomlBasicString(value)}`);
+        lines.push(`${key} = ${tomlBasicString(value, `${name}.env.${key}`)}`);
       }
     }
     lines.push('');
